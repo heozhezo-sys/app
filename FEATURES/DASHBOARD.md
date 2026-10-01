@@ -1,0 +1,1 @@
+﻿# TODAY DASHBOARD`n`nPrimary command center.`nShow date, greeting, priorities, habits, workout, hydration, reading, focus, sleep and upcoming reminders.`nProvide quick actions.`nAllow widget reorder, hide/show and compact/full modes.`nKeep the first screen useful in under a few seconds.

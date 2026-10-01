@@ -1,0 +1,1 @@
+﻿# OFFLINE FIRST`n`nAll core features work without network access.`nWrites go to local storage first.`nScreens never block on remote requests.`nRemote data is optional enhancement only.`nShow a small connectivity state when useful, never as a blocker.

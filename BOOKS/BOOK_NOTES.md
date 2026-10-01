@@ -1,0 +1,1 @@
+﻿# BOOK NOTES`n`nNotes reference a book and optionally a page or highlight.`nSupport create, edit, search, tag and delete.`nKeep notes private and local by default.`nProvide a book-specific notes view and a global notes view.

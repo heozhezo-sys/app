@@ -1,0 +1,1 @@
+﻿# PDF IMPORT`n`nImport through the iOS document picker or share workflow.`nCopy or securely reference the selected document inside LifeOS storage.`nValidate file existence, extension, readable document and metadata.`nNever upload the document automatically.`nShow progress during large imports.`nIf an import fails, keep the original file untouched and show recovery options.

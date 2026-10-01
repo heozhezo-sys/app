@@ -1,0 +1,1 @@
+﻿# VERSIONING`n`nUse semantic application versions where practical.`nTrack database schema version separately.`nEvery release records user-visible changes and migration notes.`nUse staged rollout capability when a distribution service supports it.

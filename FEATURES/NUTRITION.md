@@ -1,0 +1,1 @@
+﻿# NUTRITION`n`nManual food database and meal logging.`nFood fields: name, serving, calories, protein, carbs, fat and fiber.`nMeals: breakfast, lunch, dinner and snack.`nShow daily summaries without requiring an online food service.

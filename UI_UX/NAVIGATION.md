@@ -1,0 +1,1 @@
+﻿# NAVIGATION`n`nPrimary tabs: Today, Habits, Fitness, Library, Goals.`nSecondary modules are reached through Today, feature hubs and Settings.`nUse nested routes for detail and edit screens.`nPreserve navigation state when returning from a child screen.

@@ -1,0 +1,30 @@
+node_modules/
+.expo/
+dist/
+web-build/
+coverage/
+
+# Native build output
+android/
+ios/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+gradle.properties.local
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Logs and temp artifacts
+*.log
+*.err
+npm-debug.*
+.turbo/
+*.tsbuildinfo
+.DS_Store
+Thumbs.db

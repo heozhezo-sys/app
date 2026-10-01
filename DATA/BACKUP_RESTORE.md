@@ -1,0 +1,1 @@
+﻿# BACKUP AND RESTORE`n`nProvide local export and restore.`nBackups contain database records, preferences and file references.`nLarge personal documents are handled separately to avoid unnecessary duplication.`nValidate backup version before restore.`nCreate a safety backup before destructive restore.`nReport success or actionable errors.

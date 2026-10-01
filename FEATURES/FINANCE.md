@@ -1,0 +1,1 @@
+﻿# FINANCE`n`nOptional personal finance module.`nTrack income, expenses, savings, accounts and budgets.`nTransactions contain amount, category, date, account and notes.`nSupport PHP, USD, EUR and custom currencies.`nKeep finance records local by default.

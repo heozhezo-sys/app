@@ -1,0 +1,1 @@
+﻿# SYNC ARCHITECTURE`n`nFuture sync is optional.`nLocal writes create syncable change records only when sync is enabled.`nQueue network operations and retry safely.`nA failed network request must never roll back a successful local action.`nProvide sync status and last successful sync time.

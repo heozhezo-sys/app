@@ -1,0 +1,1 @@
+﻿# ACCESSIBILITY`n`nSupport Dynamic Type, VoiceOver, accessible labels, semantic roles, contrast and large targets.`nNever use color as the only state indicator.`nSupport Reduce Motion.`nTest critical flows with VoiceOver.

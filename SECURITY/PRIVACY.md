@@ -1,0 +1,1 @@
+﻿# PRIVACY`n`nLocal-first by default.`nJournal, finance records and personal books remain on-device unless the user explicitly enables a service requiring transfer.`nExplain permissions before requesting them.`nProvide clear data export and deletion controls.

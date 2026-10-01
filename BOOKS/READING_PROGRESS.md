@@ -1,0 +1,1 @@
+﻿# READING PROGRESS`n`nPersist current page, total pages, percentage, last opened time and status.`nRecord reading sessions with start, end, pages and duration.`nResume from the last page automatically.`nShow daily, weekly, monthly and yearly reading totals.`nCalculate derived totals from reading session records.

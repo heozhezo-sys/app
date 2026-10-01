@@ -1,0 +1,1 @@
+﻿# HIGHLIGHTS`n`nAllow page-level highlights where the reader engine exposes text or annotation support.`nStore book ID, page, selected text when available, color and timestamp.`nProvide a highlights list and jump-to-page action.`nGracefully support scanned documents where text selection is unavailable.

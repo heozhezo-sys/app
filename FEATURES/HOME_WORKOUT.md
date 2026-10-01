@@ -1,0 +1,1 @@
+﻿# HOME WORKOUT`n`nEquipment-free and equipment-based routines.`nCategories: full body, upper, lower, core, cardio, intervals, mobility and flexibility.`nBuilder supports exercises, sets, reps or time, rest and notes.`nLive session records actual completion.`nCustom exercises are supported.

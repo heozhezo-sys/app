@@ -1,0 +1,1 @@
+﻿# ACHIEVEMENTS`n`nOptional milestones such as first habit, streaks, workouts, books and reading time.`nAchievements are informational and supportive.`nTrack unlocked state and unlock date.`nAllow users to disable gamification.

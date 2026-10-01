@@ -1,0 +1,1 @@
+﻿# CALENDAR`n`nUnified timeline for habits, workouts, goals, tasks, reading, focus, reminders and journal entries.`nSupport day, week and month views.`nSelecting an event opens its owning feature.`nCalendar is derived from application records rather than becoming a second source of truth.

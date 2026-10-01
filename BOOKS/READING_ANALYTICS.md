@@ -1,0 +1,1 @@
+﻿# READING ANALYTICS`n`nTrack pages read, books completed, reading sessions, reading time and streaks.`nShow current book, current page and annual totals.`nUse historical session data as the source of truth.`nAvoid health-like claims; this is personal progress tracking.

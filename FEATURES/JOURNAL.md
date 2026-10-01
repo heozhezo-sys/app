@@ -1,0 +1,1 @@
+﻿# JOURNAL`n`nPrivate offline journal with title, body, mood, tags, date and attachments.`nSupport search, calendar, favorites, export and optional app lock.`nEntries persist immediately.`nNever transmit journal contents silently.

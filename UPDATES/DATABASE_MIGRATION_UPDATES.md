@@ -1,0 +1,1 @@
+﻿# DATABASE MIGRATION UPDATES`n`nEvery schema change has a forward migration.`nMigrations are idempotent or protected from duplicate execution.`nTest fresh install and upgrade paths.`nBackup critical data before risky migrations.`nNever use destructive reset logic in production builds.

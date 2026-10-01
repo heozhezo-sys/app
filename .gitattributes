@@ -1,0 +1,21 @@
+# Normalise line endings so a checkout on Windows and a checkout on macOS do not
+# produce spurious whole-file diffs. `* text=auto` lets Git detect, and `eol=lf`
+# guarantees LF in the working tree for source files.
+* text=auto eol=lf
+
+# Binary assets must never be line-ending translated.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.ttf binary
+*.otf binary
+*.mp3 binary
+*.mp4 binary
+*.mov binary
+
+# Lockfiles and generated files that should stay exactly as produced.
+package-lock.json -diff

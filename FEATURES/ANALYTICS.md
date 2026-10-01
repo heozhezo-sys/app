@@ -1,0 +1,1 @@
+﻿# ANALYTICS`n`nDaily, weekly, monthly and yearly views.`nTrack habits, workouts, reading, focus, sleep, hydration, goals, sports and finance.`nUse derived metrics from historical records.`nPrefer useful trends over excessive charts.`nAllow export and yearly review.

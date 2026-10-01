@@ -1,0 +1,1 @@
+﻿# HEALTH`n`nHydration, nutrition, sleep and recovery are manual-first.`nHydration: target, quick-add amounts, history and reminders.`nNutrition: meals, calories and macros with manual foods.`nSleep: bedtime, wake time, duration, quality and notes.`nRecovery: energy, soreness, recovery and mood ratings.`nAvoid diagnosis or medical claims.

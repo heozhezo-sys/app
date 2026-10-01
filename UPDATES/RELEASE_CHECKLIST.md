@@ -1,0 +1,1 @@
+﻿# RELEASE CHECKLIST`n`n[ ] Version updated`n[ ] Database migration tested`n[ ] Fresh install tested`n[ ] Upgrade tested`n[ ] Offline tested`n[ ] PDF import tested`n[ ] Backup tested`n[ ] Notifications tested`n[ ] Accessibility smoke test`n[ ] Physical-device build tested`n[ ] Crash/error logs reviewed`n[ ] Release notes written

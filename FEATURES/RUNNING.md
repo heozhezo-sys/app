@@ -1,0 +1,1 @@
+﻿# RUNNING`n`nTrack distance, duration, pace, calories and optional route/elevation.`nSupport manual sessions when sensors or permissions are unavailable.`nShow history, totals and personal records.`nKeep location optional.

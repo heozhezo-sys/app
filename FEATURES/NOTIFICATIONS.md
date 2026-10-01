@@ -1,0 +1,1 @@
+﻿# NOTIFICATIONS`n`nUse local notifications for habits, workouts, water, reading, focus and goal deadlines.`nAllow per-feature permission and schedule controls.`nNotifications must not require a server.`nHandle denied permission without breaking the feature.

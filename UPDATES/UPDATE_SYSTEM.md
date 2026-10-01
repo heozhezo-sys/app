@@ -1,0 +1,1 @@
+﻿# UPDATE SYSTEM`n`nSeparate app-code updates from data migrations.`nVersion the app and database independently.`nCheck optional update metadata when online.`nCore functionality remains available when the update service is unreachable.`nNever delete user data during an update.

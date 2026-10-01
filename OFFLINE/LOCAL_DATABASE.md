@@ -1,0 +1,1 @@
+﻿# LOCAL DATABASE`n`nUse SQLite for durable structured data.`nUse migrations for every schema change.`nUse repositories for all database access.`nWrap related writes in transactions.`nIndex frequently searched fields.`nNever store large documents as database blobs when filesystem storage is appropriate.

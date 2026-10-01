@@ -1,0 +1,1 @@
+﻿# PRODUCTIVITY`n`nTasks, priorities, focus sessions, daily planning and reviews.`nSupport recurring tasks and optional goal links.`nFocus presets: 25/5, 50/10, 90/20 plus custom.`nTrack sessions and completed work without requiring internet.

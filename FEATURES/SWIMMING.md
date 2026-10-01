@@ -1,0 +1,1 @@
+﻿# SWIMMING`n`nSupport pool and open-water sessions.`nTrack distance, duration, pool length, laps, stroke, pace, calories and notes.`nStyles include freestyle, breaststroke, backstroke, butterfly and mixed.`nManual entry works without device sensors.

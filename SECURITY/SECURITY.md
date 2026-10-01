@@ -1,0 +1,1 @@
+﻿# SECURITY`n`nKeep secrets out of source control.`nUse SecureStore for sensitive local credentials.`nValidate imported files and user input.`nDo not execute embedded document scripts.`nLimit permissions to features the user enables.`nLog security-relevant events without exposing private content.
