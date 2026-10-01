@@ -12,6 +12,7 @@ import { useCallback } from 'react';
 import { CHANNELS } from '@/database/database';
 import { useAction, useAsyncResource } from '@/hooks/useAsyncResource';
 import * as service from '@/services/financeService';
+import * as rates from '@/services/exchangeRateService';
 import type {
   Account,
   Category,
@@ -152,4 +153,53 @@ export function useSetBudget() {
   return useAction((input: Parameters<typeof service.setBudget>[0]) => service.setBudget(input));
 }
 
+export function useDeleteBudget() {
+  return useAction((id: string) => service.deleteBudget(id));
+}
+
+/* --------------------------------------------------------- currencies */
+
+/**
+ * User-entered exchange rates, keyed `FROM_TO`.
+ *
+ * Subscribes to `finance` because a rate change must also refresh any converted total
+ * sitting on the same screen — otherwise the number beside an account would keep using
+ * the rate that was just replaced.
+ */
+export function useExchangeRates() {
+  return useAsyncResource(() => rates.listRates(), CHANNELS.finance);
+}
+
+/**
+ * Account balances summed into one currency.
+ *
+ * Derived on read from the same summaries the accounts list uses, so the converted total
+ * and the per-account figures can never disagree.
+ */
+export function useConvertedTotal(base: string, accounts: readonly AccountSummary[]) {
+  return useAsyncResource(
+    async () =>
+      rates.convertedTotal(
+        accounts.map((account) => ({
+          minor: account.balance.totalMinor,
+          currency: account.currency,
+        })),
+        base,
+      ),
+    CHANNELS.finance,
+    { deps: [base, accounts] },
+  );
+}
+
+export function useSetExchangeRate() {
+  return useAction((input: Parameters<typeof rates.setRate>[0]) => rates.setRate(input));
+}
+
+export function useClearExchangeRate() {
+  return useAction(
+    (from: string, to: string) => rates.clearRate(from, to),
+  );
+}
+
 export type { Account, Category, Transaction, BudgetProgress, BudgetState };
+export type { ConvertedAmount, ConvertedTotal } from '@/services/exchangeRateService';

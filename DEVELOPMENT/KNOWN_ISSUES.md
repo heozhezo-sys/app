@@ -87,14 +87,19 @@ Feature: all
 
 **Expected.** An iOS simulator build.
 
-**Actual.** `expo run:ios` is unavailable: the build host is Windows, so there is no
+**Actual.** `expo run:ios` is unavailable: the build host is Linux, so there is no
 Xcode, no iOS Simulator and no CocoaPods.
+
+*Host note, 2026-10-01.* This issue was first recorded against a Windows host. The
+environment has since changed to Linux; the blocker is identical, since neither has Xcode.
+The finding is retained rather than rewritten, per the knowledge protocol.
 
 **Root cause.** Environment, not code. Documented in `DEVELOPMENT/PROJECT_AUDIT.md` §2.
 
 **Fix.** None available in this environment. iOS-specific behaviour is confined to
-`src/platform/*` adapters (none written yet) and the shared code has no
-`Platform.OS === 'ios'` branches, so nothing is silently iOS-only.
+`src/platform/*` adapters (`storage`, `notifications`, `biometrics` — all three written)
+and the shared code has no `Platform.OS === 'ios'` branches, so nothing is silently
+iOS-only. `tests/ui/secondaryModules.test.tsx` asserts that absence over every screen.
 
 **Regression test.** Not possible; requires hardware.
 
@@ -187,3 +192,65 @@ the stray call — which is why the file was re-read after being written.
 
 **Status.** verified
 
+### ISSUE-006 — `undoLastRestore` could never undo anything
+
+ID: ISSUE-006
+Severity: critical (data loss on the one path that can lose data)
+Platform: both
+Feature: Backup and restore
+
+**Reproduction.** Restore a backup, then press Undo.
+
+**Expected.** The data that was there before the restore comes back.
+
+**Actual.** `undoLastRestore` read its snapshot *after* assigning `lastSafetyBackup = null`,
+so `previous` was always `null` and the function returned `There is nothing to undo` on
+every call. The button was reachable, the safety backup was genuinely being taken, and the
+whole rollback path was dead. Nothing else in the app could have caught this: the restore
+itself worked correctly, and the undo was reported as an ordinary absence rather than a
+failure.
+
+**Root cause.** Ordering. The reset and the read were adjacent lines and the read was
+written as though it preceded them.
+
+**Fix.** The current state is exported *first* and the slot refilled with it, so undoing
+is itself undoable — undoing an undo returns you to the restored state rather than leaving
+the slot empty. `__resetSafetyBackupForTests()` clears the module-level slot between tests,
+and a new test asserts that a second undo goes back to the restored state.
+
+**Regression test.** `tests/integration/backup.test.ts` — "is itself undoable, so a second
+call goes back to the restored state".
+
+**Status.** verified
+
+---
+
+### ISSUE-007 — Currency conversion was a million times too large
+
+ID: ISSUE-007
+Severity: high (every converted figure was wrong)
+Platform: both
+Feature: Finance / multi-currency
+
+**Reproduction.** Convert 10.00 USD to PHP at 58.25.
+
+**Expected.** 582.50 PHP, i.e. 58250 minor units.
+
+**Actual.** 58250000000 minor units — off by exactly `RATE_SCALE`. The numerator included
+`rateMicro` but the denominator never divided by `RATE_SCALE`, so a rate stored as
+micro-units was applied as though it were a plain integer.
+
+**Root cause.** A micro-scaled rate was introduced on top of an exponent-aware conversion
+that already had its own denominator. The two scales were never reconciled, and the failure
+was silent: the result was a plausible-looking, very large number.
+
+**Fix.** The conversion is now three auditable steps ending in
+`minor * rateMicro * 10^toExponent / (10^fromExponent * RATE_SCALE)`, with the shared power
+of ten cancelled *before* multiplying so a large amount at a large rate cannot overflow a
+double and be divided back into a plausible wrong answer. Rounding is half away from zero
+in both directions, and a rounded zero is normalised to `0` rather than `-0`.
+
+**Regression test.** `tests/unit/rates.test.ts` — 33 tests covering exponent mismatch,
+float drift, sign-symmetric rounding, inversion and round-trip bounds.
+
+**Status.** verified

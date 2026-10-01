@@ -38,8 +38,9 @@ Full list in `TECH_STACK.md` and `package.json`.
 
 ## Actual database schema
 
-12 migrations, 31 tables. The authoritative source is `src/database/migrations/`;
-`DATA/DATABASE_SCHEMA.md` is only a map. Table-by-table listing is in that file.
+Schema **v15**: 15 migrations, 44 tables (42 application tables plus 2 FTS5 virtual
+tables). The authoritative source is `src/database/migrations/`; `DATA/DATABASE_SCHEMA.md`
+is only a map. Table-by-table listing is in that file.
 
 ## Actual navigation
 
@@ -49,18 +50,38 @@ app/
   index.tsx              entry gate (onboarding -> Today)
   onboarding.tsx         first run
   (tabs)/_layout.tsx     tab bar
-  (tabs)/index.tsx       Today dashboard (habits + tasks)
+  (tabs)/index.tsx       Today dashboard (habits + tasks) and the secondary-module hub
   (tabs)/habits.tsx      habits management
   (tabs)/goals.tsx       goals overview
   (tabs)/fitness.tsx     workouts, body metrics, quick sport log
+  (tabs)/focus.tsx       focus timer and reviews
+  (tabs)/books.tsx       PDF library and import
+  (tabs)/hydration.tsx   water
+  (tabs)/nutrition.tsx   food and meals
+  (tabs)/journal.tsx     journal, behind the lock gate
+  (tabs)/sleep.tsx       sleep
+  (tabs)/finance.tsx     accounts, transactions, budgets, converted balance
   manage.tsx             archive / restore / delete
   habit/[id].tsx         habit detail and history
   goal/[id].tsx          goal detail: milestones, tasks, lifecycle
   workout/[id].tsx       live set logging
+  book/[id].tsx          PDF reader
+  recovery.tsx           ratings and mobility sessions
+  analytics.tsx          period metrics and comparison
+  calendar.tsx           rolling day-grouped projection
+  achievements.tsx       grouped milestones and personal records
+  settings/index.tsx     Settings hub
+  settings/appearance.tsx  theme and motion
+  settings/units.tsx       units and targets
+  settings/currency.tsx    home currency and exchange rates
+  settings/reminders.tsx   permission, scheduled reminders, re-arm
+  settings/privacy.tsx     journal lock
+  settings/data.tsx        backup, restore, undo, journal exports
 ```
 
-The specification describes five tabs. Four exist (Today, Habits, Goals, Fitness) and
-the tab bar shows only what is implemented (ADR-0010).
+The specification describes five primary tabs. Eleven exist because every implemented
+module needs a home; the tab bar shows only what is implemented (ADR-0010) and everything
+outside it is reached from the Today hub or from Settings, per `UI_UX/NAVIGATION.md`.
 
 ## Reference data
 
@@ -74,20 +95,26 @@ are seeded after migrations by `src/database/seed.ts` using `ON CONFLICT DO NOTH
 |---|---|
 | `npm run typecheck` | exit 0 |
 | `npm run lint` | clean, zero warnings |
-| `npm test` | 222 tests, 10 suites, all passing |
+| `npm test` | 1017 tests, 36 suites, all passing |
 
 Migrations and repositories are tested against real SQLite via Node 22 `node:sqlite`.
 
 ## Unresolved risks
 
-1. **iOS cannot be verified on this host.** Windows has no Xcode. Phases 21-23 of the
+1. **iOS cannot be verified on this host.** Linux has no Xcode. Phases 21-23 of the
    specification are blocked until a macOS host is available. See `KNOWN_ISSUES.md`
    ISSUE-002.
-2. **Android runtime is unverified.** The SDK is installed but `adb` is not on `PATH`
-   and no emulator has been run.
-3. **Most features do not exist.** Habits, goals and fitness are implemented end to end;
-   books are implemented below the UI. The full ledger is
-   `DEVELOPMENT/PROJECT_STATUS.md`.
+2. **Android runtime is unverified.** No emulator or AVD is provisioned.
+3. **Nothing has been run on a device.** Every "verified" claim in this project means a
+   command passed, not that a person used the app on hardware.
+4. **The PDF reader cannot render pages or search text.** It reports those capabilities
+   as `false` rather than faking them (ADR-0006). A rasterising engine is still unselected.
+5. **Recurring transactions have schema and cadence rules but no finance UI** for
+   creating one. Reminders honour them; the finance screen does not yet offer it.
+6. **The PDF reader has five gaps that share one root cause**: page rendering, text
+   search, zoom, page modes and sepia/black reader themes all need a rendering or
+   text-layer capability `StructurePdfEngine` does not have. Selecting a rasterising
+   engine would unblock all five at once. Tracked in `DEVELOPMENT/SPEC_TRACEABILITY.md`.
 4. **Large-dataset performance is untested.** Pagination and virtualised lists are not
    implemented. See `EDGE_CASES.md` EDGE-0009.
 5. **The PDF engine reports what it cannot do.** `StructurePdfEngine` parses structure

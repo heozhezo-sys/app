@@ -30,6 +30,11 @@ Maintain these files continuously:
 - DEVELOPMENT/EDGE_CASES.md
 - DEVELOPMENT/DECISIONS.md
 - DEVELOPMENT/CHANGELOG.md
+- DEVELOPMENT/SPEC_TRACEABILITY.md — which code satisfies which line of the specification
+
+The specification files under `FEATURES/`, `BOOKS/` and `UI_UX/` are **requirements**.
+Never edit them to agree with the code. Record the gap in `SPEC_TRACEABILITY.md` instead;
+a spec rewritten to match the implementation is no longer a spec.
 
 Never erase historical findings without recording why they changed.
 

@@ -1,0 +1,57 @@
+# Verification gates.
+#
+# These are the same three commands `npm run verify` runs locally, in the same order, so a
+# green run here means the same thing as a green run on a developer machine. There is
+# nothing else in this file: no build step, no release step, no matrix of platforms.
+#
+# **What this workflow cannot do.** It runs on Linux and has no Xcode and no Android
+# emulator, so it proves nothing about how the app behaves on a device. That gap is
+# recorded as `DEVELOPMENT/KNOWN_ISSUES.md` ISSUE-002 and is not something CI here can
+# close. Treat a green check as "the gates passed", never as "the app works on a phone".
+#
+# Migration and repository tests execute the same SQL strings that ship to the device,
+# against real SQLite via Node's built-in `node:sqlite`. There is no SQLite mock, which is
+# why the Node version is pinned rather than left to float.
+
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A new push makes the previous run irrelevant; cancelling it saves minutes on a busy
+# branch without ever cancelling the run for the head commit.
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    name: typecheck, lint and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # `node:sqlite` is what makes the integration tests real rather than mocked, and
+          # it is still flagged experimental in some 22.x releases, so the floor matters.
+          node-version: '22'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        # `--max-warnings 0` is already in the script. Repeated here so that changing the
+        # script cannot silently relax CI.
+        run: npm run lint -- --max-warnings 0
+
+      - name: Test
+        run: npm test -- --ci

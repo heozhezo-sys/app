@@ -24,7 +24,7 @@ resolved by `expo install` for SDK 57 and confirmed on disk.
 
 | Package | Resolved | Why |
 |---|---|---|
-| `expo-notifications` | ~57.0.21 | Local reminders (feature not yet implemented) |
+| `expo-notifications` | ~57.0.21 | Local reminders, behind `src/platform/notifications/` |
 | `expo-document-picker` | ~57.0.3 | iOS Files and Android document providers for PDF import |
 | `expo-file-system` | ~57.0.7 | PDF storage outside SQLite |
 | `expo-sharing` | ~57.0.22 | iOS Share Sheet / Android Sharesheet |
@@ -32,9 +32,17 @@ resolved by `expo install` for SDK 57 and confirmed on disk.
 | `expo-haptics` | ~57.0.3 | Haptic feedback |
 | `expo-crypto` | ~57.0.x | Cryptographically strong UUIDs |
 
-Only `expo-sqlite`, `expo-crypto`, `expo-router` and `expo-splash-screen` are actually
-exercised by code today. The rest are installed ahead of the features that need them;
-none is required by a currently implemented screen.
+Exercised by code today: `expo-sqlite`, `expo-crypto`, `expo-router`,
+`expo-splash-screen`, `expo-file-system`, `expo-document-picker`, `expo-notifications` and
+`expo-local-authentication`.
+
+Installed ahead of the features that need them: `expo-sharing`, `expo-haptics`,
+`expo-secure-store`. None of those is required by a currently implemented screen, and no
+feature may come to depend on one.
+
+Every native capability above is reached through an adapter in `src/platform/*` that
+returns an availability or capability result rather than throwing, so the business logic
+above it is testable without the native module.
 
 ## State
 

@@ -82,6 +82,15 @@ export interface Task {
   completedAt: number | null;
   estimateMin: number | null;
   sortOrder: number;
+  /**
+   * Set when this task was created by a repeat rule, holding the id of the task that
+   * defines the rule. Null for an ordinary task.
+   *
+   * Migration 014. This is what makes "has today's occurrence already been created?" a
+   * single indexed lookup rather than a fuzzy title match, and what makes "delete every
+   * occurrence of this rule" possible at all.
+   */
+  recurringFromTaskId: string | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -127,6 +136,8 @@ export interface TaskCreateInput {
   plannedDate?: string | null;
   dueDate?: string | null;
   estimateMin?: number | null;
+  /** Set by the recurrence service when materialising an occurrence. */
+  recurringFromTaskId?: string | null;
 }
 
 export interface TaskUpdateInput {

@@ -9,6 +9,29 @@ affected feature complete.
 
 ## Entries
 
+| # | Scenario | Handled by | Test |
+|---|---|---|---|
+| 1 | Exporting twice in the same second produces the same filename | The date-stamped name is overwritten rather than duplicated, and the write is `.part` then atomic rename | `tests/integration/journalExport.test.ts` |
+| 2 | The app is killed mid-export | An orphan `.part` remains; a truncated file is never presented as complete | `tests/integration/journalExport.test.ts` |
+| 3 | The user restores a backup and immediately regrets it | A safety copy is taken first and undo stays available — and undoing an undo returns to the restored state | `tests/integration/backup.test.ts`, ISSUE-006 |
+| 4 | The restored backup references PDFs that are not on this device | The metadata comes back; the missing files are named rather than silently dropped | `tests/integration/backup.test.ts` |
+| 5 | The user types a decimal amount on a hardware keyboard | The amount stays a string until the service parses it digit by digit; no `Number()` or `parseFloat` ever touches it | `tests/ui/finance.test.tsx` |
+| 6 | A currency has no minor unit (JPY) or has three (KWD) | Conversion handles each exponent separately rather than assuming two decimals | `tests/unit/rates.test.ts` |
+| 7 | A rate is entered but the account's currency is the base | Conversion is the identity; no rate is required for a single-currency user | `tests/integration/exchangeRates.test.ts` |
+| 8 | An account is in a currency with no stored rate | The combined total names it as excluded rather than counting it as zero | `tests/integration/exchangeRates.test.ts` |
+| 9 | The stored rate blob is corrupt or the wrong shape | Read fails closed to an empty map; one bad entry does not erase the rest | `tests/integration/exchangeRates.test.ts` |
+| 10 | A conversion lands exactly on half a minor unit | Rounded half away from zero, in both directions, so −50 and +50 behave symmetrically | `tests/unit/rates.test.ts` |
+| 11 | Summing balances would exceed `Number.MAX_SAFE_INTEGER` | The sum throws rather than returning a plausible wrong total | `tests/integration/exchangeRates.test.ts` |
+| 12 | The user switches weight units | Stored grams do not change; only presentation does | asserted in `app/settings/units.tsx` |
+| 13 | The device has no enrolled biometric or device credential | The journal lock switch is disabled and the reason is stated, rather than offering a lock that would not lock | `app/settings/privacy.tsx` |
+| 14 | The app is backgrounded and returned to | The journal re-locks on blur; the unlock flag was never persisted | `tests/ui/secondaryModules.test.tsx` |
+| 15 | Notification permission is denied or later revoked | The screen states the block and points at device settings rather than re-prompting on every visit | `app/settings/reminders.tsx` |
+| 16 | The OS drops pending reminders after an update or reboot | `rehydrate()` re-arms them, and the Settings screen offers the same action by hand | `tests/integration/notifications.test.ts` |
+| 17 | The user rates only some recovery sliders for a day | Saving writes the whole set; omitted ratings are cleared, not silently kept from yesterday | `app/recovery.tsx` |
+| 18 | A metric has no previous period to compare against | `compareToPrevious` returns `null`, and the UI says "first recorded" rather than asserting a change | `tests/unit/rates.test.ts`, `app/analytics.tsx` |
+| 19 | A calendar entry's owning feature has no detail screen | The row is read-only; it does not navigate somewhere that does not exist | `app/calendar.tsx`, `tests/ui/secondaryModules.test.tsx` |
+| 20 | The timezone changes or the clock moves backwards | Date keys are local `YYYY-MM-DD` and never UTC-derived | `tests/unit/dates.test.ts` |
+
 
 ## Required coverage
 

@@ -17,22 +17,23 @@ Both platforms are first-class targets.
 - Mobility, stretching, yoga and recovery
 - Sleep, hydration and nutrition
 - Focus, productivity and journaling
-- Personal finance
+- Personal finance, budgets and multiple currencies
 - PDF book library and offline reader
-- Analytics, achievements and reviews
+- Analytics, calendar and achievements
+- Local reminders
 - Backup and restore
 - Optional synchronization
 
 ## Build host constraint
 
-**This machine is Windows.** There is no Xcode, no iOS Simulator and no CocoaPods, so
-an iOS build, install and device pass are **structurally impossible here**. That is
-recorded as `DEVELOPMENT/KNOWN_ISSUES.md` ISSUE-002 rather than quietly marked
-complete. Phases 21-23 of the specification require a macOS host.
+**This machine is Linux.** There is no Xcode, no iOS Simulator and no CocoaPods, so an
+iOS build, install and device pass are **structurally impossible here**. That is recorded
+as `DEVELOPMENT/KNOWN_ISSUES.md` ISSUE-002 rather than quietly marked complete. Phases
+21–23 of the specification require a macOS host.
 
-The Android SDK is installed at `C:\Users\Razhil\AppData\Local\Android\Sdk`, but `adb`
-is not on `PATH` and no emulator has been run, so Android runtime verification has not
-happened either.
+No Android emulator or AVD is provisioned either, so Android runtime verification has not
+happened. Nothing in this repository has been run on a device. Every "verified" claim in
+the documentation means a command passed in CI, and no more.
 
 iOS-specific behaviour must therefore be confined to `src/platform/*` adapters, which
 return a capability result rather than throwing when a native API is unavailable. Shared
@@ -73,22 +74,28 @@ npm install
 npm start          # Metro
 npm run typecheck  # tsc --noEmit
 npm run lint       # eslint, zero warnings tolerated
-npm test           # 222 tests across 10 suites
+npm test           # 1017 tests across 36 suites
 npm run verify     # all three gates in sequence
 ```
 
 ## Current status
 
-Verified on 2026-01-10: **typecheck passes, lint is clean, 222 tests pass.**
+Verified on 2026-10-01: **typecheck passes, lint is clean, 1017 tests pass across 36 suites.**
 
-Implemented end to end: foundation, design system, database (12 migrations, 31 tables),
-onboarding, Today dashboard, the **Habits** slice, the **Goals** slice with milestones
-and tasks, and **Fitness** — workouts, sets, body metrics, personal records and a
-47-sport catalogue, all sharing one activity architecture.
+Implemented end to end: foundation, design system, database (**schema v15, 15 migrations,
+44 tables**), onboarding, Today dashboard, and every feature slice the specification names
+— habits; goals with milestones and tasks; fitness with workouts, sets, body metrics and a
+47-sport catalogue; books and the PDF reader; focus; hydration, nutrition and sleep;
+recovery; the journal with export and a device-authentication lock; finance with budgets
+and multi-currency conversion; analytics; achievements; calendar; local reminders; and
+backup and restore with undo. Plus a Settings hub covering appearance, units, currency,
+targets, reminders, privacy and data.
 
-Not implemented yet: books/PDF reader, productivity and focus, health tracking, journal,
-finance, analytics, notifications and backup/restore. Their database tables exist and are
-tested, but a schema is not a feature.
+Deliberately absent rather than unfinished: the PDF engine reports that it cannot render
+pages or search text; there is no rate feed for currency conversion (the user types the
+rate); optional cloud sync has an outbox schema but no transport; HealthKit and Health
+Connect are not implemented; and the journal lock is an authentication gate, not at-rest
+encryption.
 
 Read `DEVELOPMENT/PROJECT_STATUS.md` before assuming anything is finished.
 

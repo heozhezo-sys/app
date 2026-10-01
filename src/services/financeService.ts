@@ -461,6 +461,8 @@ export async function setBudget(input: {
 }
 
 export interface BudgetProgress {
+  /** Budget row id, so the screen can remove or edit exactly this budget. */
+  id: string;
   categoryId: string;
   periodType: BudgetPeriod;
   periodKey: string;
@@ -487,6 +489,7 @@ export async function budgetProgress(
   for (const budget of budgets) {
     const spent = await repository.spentInCategory(budget.categoryId, from, to);
     out.push({
+      id: budget.id,
       categoryId: budget.categoryId,
       periodType,
       periodKey: key,

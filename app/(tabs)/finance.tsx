@@ -23,14 +23,20 @@ import {
   useAccountSummaries,
   useBudgetProgress,
   useCategories,
+  useConvertedTotal,
   useCreateAccount,
+  useDeleteBudget,
   useRecordTransaction,
   useRecordTransfer,
+  useSetBudget,
   useToday,
   useTransactions,
+  type AccountSummary,
 } from '@/features/finance/hooks/useFinance';
 import { isValidationError } from '@/services/errors';
+import { CURRENCY_PRESETS, currencyName } from '@/services/exchangeRateService';
 import { formatMinor } from '@/utils/money';
+import { useSettings } from '@/stores/settingsStore';
 import { useTheme } from '@/theme/ThemeProvider';
 
 type Mode = 'expense' | 'income' | 'transfer';
@@ -83,6 +89,86 @@ function FieldError({ message }: { message: string | undefined }): React.ReactEl
   );
 }
 
+/**
+ * Every account's balance as one number in the base currency.
+ *
+ * Only rendered when more than one currency is actually present, because for a
+ * single-currency user this would restate the figure above it and imply a conversion
+ * that never happened.
+ *
+ * The currencies that could **not** be converted are named rather than dropped. A total
+ * that silently omits an account looks complete, and a person budgeting from it would
+ * be working from a number that is wrong.
+ */
+function ConvertedTotalCard({
+  accounts,
+  base,
+  converted,
+}: {
+  accounts: readonly AccountSummary[];
+  base: string;
+  converted: {
+    status: 'loading' | 'ready' | 'error';
+    data: {
+      minor: number;
+      missing: string[];
+      amounts: {
+        currency: string;
+        minor: number;
+        convertedMinor: number | null;
+        rateLabel: string | null;
+      }[];
+    } | null;
+  };
+}): React.ReactElement | null {
+  const currencies = [...new Set(accounts.map((account) => account.currency))];
+  if (currencies.length < 2) return null;
+
+  if (converted.status === 'loading' || !converted.data) {
+    return (
+      <View style={styles.convertedBlock}>
+        <AppText variant="caption" tone="muted">
+          Converting to {base}…
+        </AppText>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.convertedBlock}>
+      <View style={styles.divider} />
+      <AppText variant="body" weight="600">
+        Combined in {base}
+      </AppText>
+      <AppText
+        variant="display"
+        accessibilityLabel={`Combined balance across all accounts: ${formatMinor(converted.data.minor, base, { showSign: true })}`}
+      >
+        {formatMinor(converted.data.minor, base, { showSign: true })}
+      </AppText>
+
+      {converted.data.amounts
+        .filter((amount) => amount.convertedMinor !== null && amount.rateLabel !== null)
+        .map((amount) => (
+          <AppText key={amount.currency} variant="caption" tone="muted">
+            {amount.rateLabel} · {amount.currency}{' '}
+            {formatMinor(amount.minor, amount.currency)}
+          </AppText>
+        ))}
+
+      {converted.data.missing.length > 0 ? (
+        <>
+          <Spacer size="xs" />
+          <AppText variant="caption" tone="warning">
+            Not included: {[...new Set(converted.data.missing)].join(', ')}. Add a rate for
+            those currencies in Settings to include them.
+          </AppText>
+        </>
+      ) : null}
+    </View>
+  );
+}
+
 export default function FinanceScreen(): React.ReactElement {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -95,6 +181,9 @@ export default function FinanceScreen(): React.ReactElement {
   const createAccount = useCreateAccount();
   const record = useRecordTransaction();
   const transfer = useRecordTransfer();
+  const setBudget = useSetBudget();
+  const deleteBudget = useDeleteBudget();
+  const settings = useSettings();
 
   const [mode, setMode] = useState<Mode>('expense');
   const [amount, setAmount] = useState('');
@@ -102,6 +191,9 @@ export default function FinanceScreen(): React.ReactElement {
   const [categoryId, setCategoryId] = useState('');
   const [toAccountId, setToAccountId] = useState('');
   const [accountName, setAccountName] = useState('');
+  const [accountCurrency, setAccountCurrency] = useState(settings.currency);
+  const [budgetAmount, setBudgetAmount] = useState('');
+  const [budgetCategoryId, setBudgetCategoryId] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Stable empty arrays rather than `?? []` inline: a fresh literal on every render would
@@ -110,6 +202,15 @@ export default function FinanceScreen(): React.ReactElement {
   const categoryList = useMemo(() => categories.data ?? [], [categories.data]);
   const transactionList = useMemo(() => transactions.data ?? [], [transactions.data]);
   const budgetList = useMemo(() => budgets.data ?? [], [budgets.data]);
+
+  /**
+   * The chosen reporting currency.
+   *
+   * Defaults to the Settings currency so the number a user sees first is the one they
+   * chose as home, rather than whatever their first account happened to be.
+   */
+  const baseCurrency = settings.currency;
+  const converted = useConvertedTotal(baseCurrency, accountList);
 
   /** The account an entry is filed against; falls back to the first available. */
   const activeAccount = useMemo(
@@ -166,7 +267,7 @@ export default function FinanceScreen(): React.ReactElement {
       await createAccount.run({
         name: accountName,
         type: 'cash',
-        currency: 'USD',
+        currency: accountCurrency,
         openingBalance: '0',
       });
       setAccountName('');
@@ -178,11 +279,33 @@ export default function FinanceScreen(): React.ReactElement {
       }
       setErrors({ name: 'That account could not be added.' });
     }
-  }, [accountName, accounts, createAccount]);
+  }, [accountCurrency, accountName, accounts, createAccount]);
 
-  const currency = activeAccount?.currency ?? 'USD';
+  const saveBudget = useCallback(async () => {
+    setErrors({});
+    try {
+      await setBudget.run({
+        categoryId: budgetCategoryId,
+        periodType: 'monthly',
+        amount: budgetAmount,
+        currency: baseCurrency,
+        date: today,
+      });
+      setBudgetAmount('');
+      await budgets.refresh();
+    } catch (error) {
+      if (isValidationError(error)) {
+        setErrors(error.fields as Record<string, string>);
+        return;
+      }
+      setErrors({ amount: 'That budget could not be saved.' });
+    }
+  }, [baseCurrency, budgetAmount, budgetCategoryId, budgets, setBudget, today]);
+
+  const currency = activeAccount?.currency ?? baseCurrency;
   /** Categories are kind-specific: an expense cannot be filed under an income category. */
   const visibleCategories = categoryList.filter((category) => category.kind === mode);
+  const expenseCategories = categoryList.filter((category) => category.kind === 'expense');
   const transferTargets = accountList.filter((account) => account.id !== activeAccount?.id);
 
   return (
@@ -223,7 +346,8 @@ export default function FinanceScreen(): React.ReactElement {
                       {account.name}
                     </AppText>
                     <AppText variant="caption" tone="muted">
-                      {account.currency} · spent {formatMinor(account.balance.expenseMinor, account.currency)}
+                      {account.currency} · spent{' '}
+                      {formatMinor(account.balance.expenseMinor, account.currency)}
                     </AppText>
                   </View>
                   <Amount
@@ -235,6 +359,7 @@ export default function FinanceScreen(): React.ReactElement {
                 </View>
               </View>
             ))}
+            <ConvertedTotalCard accounts={accountList} base={baseCurrency} converted={converted} />
           </Card>
         )}
 
@@ -401,6 +526,30 @@ export default function FinanceScreen(): React.ReactElement {
             testID="finance-account-name"
           />
           <Spacer size="sm" />
+          <AppText variant="caption" tone="muted">
+            Currency
+          </AppText>
+          <Spacer size="xs" />
+          <View style={styles.wrapRow}>
+            {CURRENCY_PRESETS.slice(0, 6).map((preset) => (
+              <View key={preset.code} style={styles.chip}>
+                <Button
+                  label={`${preset.code} · ${preset.name}`}
+                  onPress={() => setAccountCurrency(preset.code)}
+                  variant={accountCurrency === preset.code ? 'primary' : 'secondary'}
+                  size="compact"
+                  selected={accountCurrency === preset.code}
+                  testID={`finance-new-currency-${preset.code}`}
+                />
+              </View>
+            ))}
+          </View>
+          <AppText variant="caption" tone="muted">
+            {currencyName(accountCurrency)}. Any three-letter ISO code is accepted; type it
+            in Settings if it is not listed here.
+          </AppText>
+          <FieldError message={errors.currency} />
+          <Spacer size="sm" />
           <Button
             label="Add account"
             onPress={addAccount}
@@ -425,7 +574,7 @@ export default function FinanceScreen(): React.ReactElement {
             state="empty"
             compact
             emptyTitle="No budgets set"
-            emptyBody="Set a limit to track a category."
+            emptyBody="Set a limit below to track a category."
           />
         ) : (
           <Card>
@@ -441,19 +590,87 @@ export default function FinanceScreen(): React.ReactElement {
                     </AppText>
                     <Amount
                       minor={budget.state.remainingMinor}
-                      currency={currency}
-                      label={budget.state.overBudget ? `${name} overspent by` : `${name} remaining`}
+                      currency={baseCurrency}
+                      label={
+                        budget.state.overBudget ? `${name} overspent by` : `${name} remaining`
+                      }
                       tone={budget.state.overBudget ? 'danger' : 'default'}
+                    />
+                    <Button
+                      label="Remove"
+                      variant="ghost"
+                      size="compact"
+                      onPress={() => {
+                        void deleteBudget.run(budget.id).then(() => void budgets.refresh());
+                      }}
+                      accessibilityHint={`Remove the ${name} budget for this month`}
                     />
                   </View>
                   <AppText variant="caption" tone="muted">
-                    {budget.state.percentUsed}% of {formatMinor(budget.state.limitMinor, currency)} used
+                    {budget.state.percentUsed}% of{' '}
+                    {formatMinor(budget.state.limitMinor, baseCurrency)} used
                   </AppText>
                 </View>
               );
             })}
           </Card>
         )}
+
+        <Spacer size="sm" />
+
+        <Card>
+          <AppText variant="subheading">Set a budget</AppText>
+          <Spacer size="xs" />
+          <AppText variant="caption" tone="muted">
+            Setting a limit again replaces the one for this category and month.
+          </AppText>
+          <Spacer size="sm" />
+          <AppText variant="caption" tone="muted">
+            Category
+          </AppText>
+          <Spacer size="xs" />
+          {expenseCategories.length === 0 ? (
+            <AppText variant="caption" tone="muted">
+              Add an expense category first.
+            </AppText>
+          ) : (
+            <View style={styles.wrapRow}>
+              {expenseCategories.map((category) => (
+                <View key={category.id} style={styles.chip}>
+                  <Button
+                    label={category.name}
+                    onPress={() => setBudgetCategoryId(category.id)}
+                    variant={budgetCategoryId === category.id ? 'primary' : 'secondary'}
+                    size="compact"
+                    selected={budgetCategoryId === category.id}
+                    testID={`finance-budget-category-${category.id}`}
+                  />
+                </View>
+              ))}
+            </View>
+          )}
+          <FieldError message={errors.categoryId} />
+          <Spacer size="sm" />
+          <TextField
+            label={`Monthly limit (${baseCurrency})`}
+            value={budgetAmount}
+            onChangeText={setBudgetAmount}
+            placeholder="300"
+            keyboardType="decimal-pad"
+            error={errors.amount}
+            testID="finance-budget-amount"
+          />
+          <Spacer size="sm" />
+          <Button
+            label="Save budget"
+            onPress={saveBudget}
+            variant="secondary"
+            loading={setBudget.pending}
+            disabled={budgetCategoryId === '' || budgetAmount.trim() === ''}
+            fullWidth
+            testID="finance-budget-save"
+          />
+        </Card>
 
         <Spacer size="md" />
 
@@ -528,6 +745,10 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     opacity: 0.2,
     marginVertical: 4,
+  },
+  convertedBlock: {
+    marginTop: 12,
+    gap: 4,
   },
 });
 

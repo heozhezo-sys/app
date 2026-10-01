@@ -1,8 +1,8 @@
 /**
  * Minimal PDF byte generator for tests.
  *
- * Produces structurally real PDF bytes â€” object table, catalog, page tree, info
- * dictionary, optional outline, optional encryption â€” so the parser and import
+ * Produces structurally real PDF bytes — object table, catalog, page tree, info
+ * dictionary, optional outline, optional encryption — so the parser and import
  * pipeline are exercised against actual PDF syntax rather than a mock.
  *
  * Test-only. Never imported by application code.

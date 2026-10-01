@@ -3,6 +3,15 @@
 Established at the first real implementation run. Every number below was produced by
 running the command, not by estimation.
 
+> **Current state (2026-10-01): 1017 tests across 36 suites; typecheck and lint clean;
+> schema v15 with 15 migrations and 44 tables.** The tables below record the *starting*
+> baseline and are kept as history, per the knowledge protocol's rule against erasing
+> earlier findings. For what is true now, read `DEVELOPMENT/PROJECT_STATUS.md`.
+>
+> The environment has also changed: the host is now **Linux** (Node 22.23.2) rather than
+> Windows, and no Android SDK or emulator is provisioned. The iOS blocker is unchanged —
+> neither host has Xcode — so ISSUE-002 still stands.
+
 ## Environment (verified)
 
 | Tool | Version | Command |
@@ -43,11 +52,11 @@ was introduced by the work and has been resolved; they are listed in `CHANGELOG.
 
 ## Verification gates (current)
 
-| Gate | Command | Result |
-|---|---|---|
-| Types | `npm run typecheck` | **PASS** (exit 0) |
-| Tests | `npm test` | **PASS** — 222 tests, 10 suites |
-| Lint | `npm run lint` | see `CHANGELOG.md` for final state |
+| Gate | Command | Result (at baseline) | Result (2026-10-01) |
+|---|---|---|---|
+| Types | `npm run typecheck` | **PASS** (exit 0) | **PASS** (exit 0) |
+| Tests | `npm test` | **PASS** — 222 tests, 10 suites | **PASS** — 1017 tests, 36 suites |
+| Lint | `npm run lint` | see `CHANGELOG.md` for final state | **PASS** — zero warnings |
 
 ### What the test suite actually covers
 

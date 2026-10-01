@@ -11,6 +11,7 @@
 
 import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/AppText';
@@ -25,8 +26,10 @@ import {
   useToggleFavorite,
   type JournalFilter,
 } from '@/features/journal/hooks/useJournal';
+import { useJournalLock } from '@/features/settings/hooks/useSettingsActions';
 import * as journalService from '@/services/journalService';
 import { isValidationError } from '@/services/errors';
+import { useSettings } from '@/stores/settingsStore';
 import { useTheme } from '@/theme/ThemeProvider';
 
 interface EntrySummary {
@@ -40,7 +43,7 @@ interface EntrySummary {
 /** A one-line preview for the list, without truncating mid-word into nonsense. */
 function previewOf(body: string): string {
   const single = body.replace(/\s+/g, ' ').trim();
-  return single.length <= 90 ? single : `${single.slice(0, 90)}â€¦`;
+  return single.length <= 90 ? single : `${single.slice(0, 90)}…`;
 }
 
 export default function JournalScreen(): React.ReactElement {
@@ -54,8 +57,29 @@ export default function JournalScreen(): React.ReactElement {
   const [title, setTitle] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const entries = useJournalEntries(filter);
-  const search = useJournalSearch(query);
+  const settings = useSettings();
+  const lockEnabled = settings.journalLockEnabled;
+  const lock = useJournalLock();
+
+  // The unlock flag lives in memory so it clears on restart. That is the whole point of
+  // the lock, so this screen re-checks every time it comes back into view rather than
+  // trusting the state it had when it was last focused.
+  const refreshLock = lock.refresh;
+  const lockOnBlur = lock.relock.run;
+  useFocusEffect(
+    useCallback(() => {
+      void refreshLock();
+      // Re-lock on the way out, so switching tabs and coming back asks again.
+      return () => {
+        void lockOnBlur();
+      };
+    }, [lockOnBlur, refreshLock]),
+  );
+
+  const hidden = lockEnabled && lock.data?.unlocked !== true;
+
+  const entries = useJournalEntries(filter, 30, !hidden);
+  const search = useJournalSearch(query, !hidden);
   const create = useCreateEntry();
   const toggleFavorite = useToggleFavorite();
   const remove = useDeleteEntry();
@@ -112,6 +136,128 @@ export default function JournalScreen(): React.ReactElement {
         </AppText>
 
         <Spacer size="md" />
+
+        {/*
+          The lock gate. Nothing below this line renders while the journal is hidden, so
+          a preview of an entry is never on screen even for a frame, and the list is not
+          fetched at all while locked.
+        */}
+        {hidden ? (
+          <Card>
+            <AppText variant="subheading">Journal locked</AppText>
+            <Spacer size="xs" />
+            <AppText variant="caption" tone="muted">
+              {lock.data?.blockedReason ??
+                'Authenticate with your device to open your journal.'}
+            </AppText>
+            <Spacer size="md" />
+            <Button
+              label="Unlock"
+              onPress={() => void lock.unlock.run()}
+              loading={lock.unlock.pending}
+              disabled={lock.data?.blockedReason !== null && lock.data !== undefined}
+              fullWidth
+              testID="journal-unlock"
+            />
+            {lock.unlock.error ? (
+              <>
+                <Spacer size="sm" />
+                <AppText variant="caption" tone="danger" accessibilityRole="alert">
+                  {lock.unlock.error.message}
+                </AppText>
+              </>
+            ) : null}
+          </Card>
+        ) : (
+          <>
+            <TextField
+              label="Search entries"
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Search your writing"
+              testID="journal-search"
+            />
+
+            {searching && search.strategy === 'like' ? (
+              <>
+                <Spacer size="xs" />
+                {/* Honest about the slower path rather than implying the index ran. */}
+                <AppText variant="micro" tone="muted">
+                  Searching without an index on this device, which is slower.
+                </AppText>
+              </>
+            ) : null}
+
+            <Spacer size="sm" />
+            <View style={styles.row}>
+              <Button
+                label="All"
+                variant={filter === 'all' ? 'primary' : 'secondary'}
+                onPress={() => setFilter('all')}
+                selected={filter === 'all'}
+                accessibilityHint="Show every entry"
+              />
+              <Button
+                label="Favourites"
+                variant={filter === 'favorites' ? 'primary' : 'secondary'}
+                onPress={() => setFilter('favorites')}
+                selected={filter === 'favorites'}
+                accessibilityHint="Show only entries you marked as favourites"
+              />
+            </View>
+
+            <Spacer size="md" />
+
+            {composing ? (
+              <Card>
+                <AppText variant="subheading">New entry</AppText>
+                <Spacer size="sm" />
+                <TextField
+                  label="Title"
+                  value={title}
+                  onChangeText={setTitle}
+                  placeholder="Optional"
+                  error={errors.title}
+                  testID="journal-title"
+                />
+                <Spacer size="sm" />
+                <TextField
+                  label="What happened?"
+                  value={body}
+                  onChangeText={setBody}
+                  placeholder="Write freely"
+                  multiline
+                  error={errors.body}
+                  testID="journal-body"
+                />
+                <Spacer size="md" />
+                <View style={styles.row}>
+                  <Button
+                    label="Save entry"
+                    onPress={() => void save()}
+                    loading={create.pending}
+                    disabled={create.pending}
+                    testID="journal-save"
+                  />
+                  <Button
+                    label="Cancel"
+                    variant="ghost"
+                    onPress={() => {
+                      setComposing(false);
+                      setErrors({});
+                    }}
+                  />
+                </View>
+              </Card>
+            ) : (
+              <Button label="Write an entry" onPress={() => setComposing(true)} fullWidth />
+            )}
+
+            <Spacer size="md" />
+
+            {renderList()}
+          </>
+        )}
 
         <TextField
           label="Search entries"
@@ -281,7 +427,7 @@ function EntryList({
         <Card key={entry.id}>
           <AppText variant="subheading">{entry.title ?? 'Untitled entry'}</AppText>
           <AppText variant="caption" tone="muted">
-            {entry.entryDate} Â· {entry.preview}
+            {entry.entryDate} · {entry.preview}
           </AppText>
           <Spacer size="sm" />
           <View style={styles.row}>
