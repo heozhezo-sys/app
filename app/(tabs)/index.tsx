@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/AppText';
@@ -21,10 +22,54 @@ import type { HabitWithTodayState } from '@/types/habits';
  * Shows only what needs doing now: today's habits with their state, and honest
  * progress. Metrics are deliberately absent; the specification asks for calm, not
  * for a wall of charts.
+ *
+ * The hub at the bottom is the one exception, because it is navigation rather than
+ * content: it is how the secondary modules are reached at all.
  */
+
+/**
+ * Every implemented destination outside the tab bar.
+ *
+ * Kept as one list so it cannot drift from the routes actually registered in
+ * `app/_layout.tsx`. Adding a screen without adding it here would leave it reachable
+ * only by typing a path.
+ */
+const HUB_LINKS: { label: string; href: string; description: string; testID: string }[] = [
+  {
+    label: 'Recovery',
+    href: '/recovery',
+    description: 'Daily ratings and mobility sessions',
+    testID: 'recovery',
+  },
+  {
+    label: 'Analytics',
+    href: '/analytics',
+    description: 'Totals and trends over a day, week, month or year',
+    testID: 'analytics',
+  },
+  {
+    label: 'Calendar',
+    href: '/calendar',
+    description: 'Everything you have recorded, by day',
+    testID: 'calendar',
+  },
+  {
+    label: 'Achievements',
+    href: '/achievements',
+    description: 'Milestones counted from your own records',
+    testID: 'achievements',
+  },
+  {
+    label: 'Settings',
+    href: '/settings',
+    description: 'Units, currency, reminders, privacy and backups',
+    testID: 'settings',
+  },
+];
 export default function TodayScreen(): React.ReactElement {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const habits = useHabitsForDate();
   const tasks = useTasksForDay();
   const toggleTask = useToggleTask();
@@ -132,6 +177,35 @@ export default function TodayScreen(): React.ReactElement {
 
           <Spacer size="xl" />
           <Button label="New habit" onPress={() => setEditing(true)} variant="secondary" fullWidth />
+
+          {/*
+            The secondary-module hub.
+
+            `UI_UX/NAVIGATION.md` names five primary tabs and asks that everything else be
+            reached "through Today, feature hubs and Settings". This is that hub: one
+            place listing every implemented destination outside the tab bar, so nothing
+            is reachable only by luck of the tab order. ADR-0010 already requires that a
+            destination only appears once it is implemented.
+          */}
+          <Section title="Everything else">
+            <Card flush>
+              {HUB_LINKS.map((link, index) => (
+                <View key={link.href}>
+                  {index > 0 && <View style={styles.divider} />}
+                  <Button
+                    label={link.label}
+                    accessibilityLabel={`${link.label}. ${link.description}`}
+                    accessibilityHint={link.description}
+                    onPress={() => router.push(link.href as never)}
+                    variant="ghost"
+                    fullWidth
+                    style={styles.hubRow}
+                    testID={`today-hub-${link.testID}`}
+                  />
+                </View>
+              ))}
+            </Card>
+          </Section>
         </View>
       </View>
 
@@ -209,4 +283,10 @@ const styles = StyleSheet.create({
   },
   list: { gap: 8 },
   track: { flexDirection: 'row' },
+  hubRow: { justifyContent: 'flex-start', paddingHorizontal: 16 },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    opacity: 0.2,
+    marginHorizontal: 16,
+  },
 });

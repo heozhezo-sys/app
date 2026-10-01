@@ -16,7 +16,7 @@ export interface TextFieldProps {
   multiline?: boolean;
   keyboardType?: 'default' | 'number-pad' | 'decimal-pad' | 'numbers-and-punctuation' | 'email-address';
   autoFocus?: boolean;
-  autoCapitalize?: 'none' | 'sentences' | 'words';
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   testID?: string;
 }
 

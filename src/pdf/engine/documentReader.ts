@@ -230,8 +230,8 @@ const MAX_OUTLINE_ITEMS = 2000;
 /**
  * Walks the outline's linked list.
  *
- * Items are siblings via `/Next` and parents via `/First`. A dangling `/Next` â€” common
- * in files with a damaged xref â€” ends the list rather than looping, because `visited`
+ * Items are siblings via `/Next` and parents via `/First`. A dangling `/Next` — common
+ * in files with a damaged xref — ends the list rather than looping, because `visited`
  * catches the cycle.
  */
 function readOutline(

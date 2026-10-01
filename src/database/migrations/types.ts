@@ -36,4 +36,4 @@ export interface Migration {
   readonly allowDataLoss?: false;
 }
 
-export const LATEST_SCHEMA_VERSION = 12;
+export const LATEST_SCHEMA_VERSION = 15;

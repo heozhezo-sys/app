@@ -122,7 +122,7 @@ describe('upgrading an existing database', () => {
     const result = await runMigrations(driver);
 
     expect(result.from).toBe(3);
-    expect(result.applied.map((a) => a.version)).toEqual([4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    expect(result.applied.map((a) => a.version)).toEqual([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
     expect(await userVersion(driver)).toBe(LATEST_SCHEMA_VERSION);
     await driver.close();
   });

@@ -34,6 +34,87 @@ Verification:
 
 Follow-up:
 
+---
+
+### 2026-10-01 — Recovery, achievements, analytics, calendar, reminders, backup and Settings
+
+Change:
+Implemented every remaining feature slice in the specification, then wired a Settings hub
+and a Today hub so each one is reachable. Schema v15: 15 migrations, 44 tables. **1017
+tests across 36 suites pass**; typecheck and lint are clean.
+
+- **Recovery** — daily 1-10 ratings (energy, soreness, recovery, mood) and six mobility
+  kinds, with a 14-day report derived on read. The 1-10 control is a row of discrete
+  buttons, not a slider, because a slider is below the 48pt minimum and its value is
+  invisible to a screen reader.
+- **Reminders** — local notifications behind `src/platform/notifications/`, permission
+  requested only from a deliberate tap, and `rehydrate()` on launch because Android drops
+  pending alarms on reboot and both platforms drop them on update.
+- **Backup and restore** — inspect-then-confirm restore, transactional replace, safety
+  copy, and an undo that is itself undoable. See ISSUE-006 for the bug this replaced.
+- **Journal export and lock** — Markdown/JSON/CSV to local files with bodies omitted by
+  default, atomic `.part` then rename, and an authentication gate that re-locks on blur.
+- **Analytics, achievements, calendar** — all derived on read; no rollup table.
+- **Multi-currency** — user-typed rates stored as micro-scaled integers, conversion
+  exponent-aware, and a combined balance that *names* the currencies it cannot convert.
+- **Settings** — appearance, units and targets, currency and rates, reminders, privacy,
+  and data. `gamificationEnabled` is a real preference, not a reuse of the motion setting.
+
+Reason:
+The specification asks for these features and the previous state described a schema as if
+it were a feature. Two bugs were found and fixed while building them (ISSUE-006, ISSUE-007)
+— both silent, and both in paths that previously had no test.
+
+Affected areas:
+`app/settings/*`, `app/recovery.tsx`, `app/achievements.tsx`, `app/analytics.tsx`,
+`app/calendar.tsx`, `app/(tabs)/journal.tsx`, `app/(tabs)/finance.tsx`, `app/(tabs)/index.tsx`,
+`app/_layout.tsx`, `src/finance/rates.ts`, `src/repositories/exchangeRateRepository.ts`,
+`src/services/exchangeRateService.ts`, `src/types/settings.ts`, `src/components/TextField.tsx`.
+
+Database/migration:
+No new migration this pass. Migrations 013-015 (recovery, recurrence, reminder text) were
+added in the same working session and are already reflected in schema v15.
+
+Platforms:
+Shared code only. No `Platform.OS` branch was introduced; the notifications and biometrics
+adapters return availability results rather than throwing.
+
+Verification:
+`npm run typecheck`, `npm run lint`, `npm test` — all pass. **No device run**: iOS is
+impossible on this Linux host (ISSUE-002) and no Android emulator is provisioned.
+
+Follow-up:
+Recurring transactions have schema and cadence rules but no finance UI for creating one.
+The PDF engine still reports `rendering: false` and `textSearch: false` by design.
+
+---
+
+### 2026-10-01 — Fixed a silent bug in currency conversion
+
+Change:
+`convertMinor` never divided out `RATE_SCALE`, so every converted amount was a million
+times too large. Rewrote the arithmetic as three auditable steps, cancelled the shared
+power of ten before multiplying to avoid overflow, and normalised a rounded `-0` to `0`.
+
+Reason:
+Found by writing the test for the feature rather than by running the app. The wrong result
+was a plausible-looking large number, which is the worst shape a money bug can take.
+
+Affected areas:
+`src/finance/rates.ts`.
+
+Database/migration:
+None.
+
+Platforms:
+Both; pure arithmetic.
+
+Verification:
+`tests/unit/rates.test.ts`, 33 tests.
+
+Follow-up:
+None. Recorded as ISSUE-007.
+
 ### 2026-01-10 — Phase 13, part 2: finance UI; fixed a non-deterministic transfer direction
 
 **Change.** Added the Finance screen (`app/(tabs)/finance.tsx`) and its hook layer

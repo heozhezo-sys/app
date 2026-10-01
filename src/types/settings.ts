@@ -27,6 +27,7 @@ export const DEFAULT_SETTINGS: Settings = {
   journalLockEnabled: false,
   reduceMotionOverride: false,
   notificationsEnabled: false,
+  gamificationEnabled: true,
 };
 
 export interface Settings {
@@ -47,6 +48,13 @@ export interface Settings {
   /** Force reduced motion regardless of the OS setting. */
   reduceMotionOverride: boolean;
   notificationsEnabled: boolean;
+  /**
+   * `FEATURES/ACHIEVEMENTS.md`: users may switch gamification off.
+   *
+   * Switching it off suppresses unlock celebrations, never the underlying counts — the
+   * records still exist and are still shown when asked for.
+   */
+  gamificationEnabled: boolean;
 }
 
 /** Merge persisted JSON over defaults so a new field never breaks an old install. */
@@ -85,5 +93,9 @@ export function normaliseSettings(raw: unknown): Settings {
     journalLockEnabled: input.journalLockEnabled === true,
     reduceMotionOverride: input.reduceMotionOverride === true,
     notificationsEnabled: input.notificationsEnabled === true,
+    // Defaults to on when absent: an install written before this field existed, or one
+    // whose value was lost, should keep the behaviour the user last saw rather than
+    // silently losing every celebration.
+    gamificationEnabled: input.gamificationEnabled !== false,
   };
 }

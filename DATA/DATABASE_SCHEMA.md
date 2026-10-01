@@ -3,7 +3,9 @@
 Authoritative definition: the TypeScript modules in `src/database/migrations/`.
 Those are the SQL that is executed — this file is a map, not the source of truth.
 
-Schema version: **12**
+Schema version: **15** (15 migrations, 44 tables — 42 application tables plus 2 FTS5
+virtual tables). `LATEST_SCHEMA_VERSION` in `src/database/migrations/types.ts` must equal
+`MIGRATIONS.length`; `tests/integration/backup.test.ts` asserts it.
 
 ## Conventions
 
@@ -31,6 +33,9 @@ Schema version: **12**
 | 010 achievements | `achievements`, `achievement_unlocks`, `personal_records` |
 | 011 sync | `sync_queue`, `sync_state` |
 | 012 search | `search_capabilities`, plus FTS5 tables/triggers when available |
+| 013 recovery | `recovery_logs`, `mobility_sessions` |
+| 014 recurrence | `task_recurrence`, `recurring_transactions` |
+| 015 reminder text | alters `reminders` to add `title` and `body` |
 
 ## Integrity rules enforced by the database itself
 
@@ -51,4 +56,12 @@ These are verified by `tests/integration/schema.test.ts`, not merely by applicat
 
 PDF binaries and other large media. Those live in application filesystem storage;
 the database holds only the metadata and a relative filename.
+
+Journal exports and backups are also files, not rows. A backup is a JSON document written
+to application storage; nothing about it is persisted in the database, and neither is the
+journal's unlocked state — that flag is deliberately in memory so a restart re-locks it.
+
+Exchange rates are stored as micro-scaled integers in the `preferences` key/value table
+rather than in a table of their own: the map is only ever read and written as a whole, and
+a rate is user input rather than a domain record.
 

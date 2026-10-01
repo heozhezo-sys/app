@@ -16,12 +16,23 @@ import { todayKey, type DateKey } from '@/utils/dates';
 
 export type JournalFilter = 'all' | 'favorites';
 
-export function useJournalEntries(filter: JournalFilter = 'all', limit = 30) {
+/**
+ * Entries for the list, or `favorites`.
+ *
+ * `enabled` exists for the journal lock: entries are not *fetched* while the journal is
+ * hidden, rather than fetched and hidden. A preview that arrives one frame after the gate
+ * is exactly what a lock has to prevent.
+ */
+export function useJournalEntries(
+  filter: JournalFilter = 'all',
+  limit = 30,
+  enabled = true,
+) {
   return useAsyncResource(
     async () =>
       filter === 'favorites' ? service.listFavorites() : service.listEntries({ limit }),
     CHANNELS.journal,
-    { deps: [filter, limit] },
+    { enabled, deps: [filter, limit] },
   );
 }
 
@@ -30,8 +41,11 @@ export function useJournalEntries(filter: JournalFilter = 'all', limit = 30) {
  *
  * The strategy is carried alongside the results so a screen can say it fell back to the
  * slower path, rather than implying the indexed one ran.
+ *
+ * `enabled` is the same journal-lock gate as {@link useJournalEntries}: a search must not
+ * run against a locked journal either, because its results are entry content.
  */
-export function useJournalSearch(query: string) {
+export function useJournalSearch(query: string, enabled = true) {
   const [strategy, setStrategy] = useState<SearchStrategy | null>(null);
 
   const resource = useAsyncResource(
@@ -41,7 +55,7 @@ export function useJournalSearch(query: string) {
       return result.entries;
     },
     CHANNELS.journal,
-    { enabled: query.trim() !== '', deps: [query] },
+    { enabled: enabled && query.trim() !== '', deps: [query, enabled] },
   );
 
   return { ...resource, strategy };

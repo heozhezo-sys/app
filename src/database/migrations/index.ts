@@ -11,6 +11,9 @@ import { migration009 } from './009_finance';
 import { migration010 } from './010_achievements';
 import { migration011 } from './011_sync';
 import { migration012 } from './012_search';
+import { migration013 } from './013_recovery';
+import { migration014 } from './014_recurrence';
+import { migration015 } from './015_reminder_text';
 
 export type { Migration } from './types';
 
@@ -31,4 +34,7 @@ export const MIGRATIONS: readonly Migration[] = [
   migration010,
   migration011,
   migration012,
+  migration013,
+  migration014,
+  migration015,
 ];

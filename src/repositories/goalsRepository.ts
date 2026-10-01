@@ -66,6 +66,8 @@ interface TaskRow {
   completed_at: number | null;
   estimate_min: number | null;
   sort_order: number;
+  /** Added by migration 014. Absent on rows read from a pre-014 snapshot. */
+  recurring_from_task_id?: string | null;
   created_at: number;
   updated_at: number;
 }
@@ -116,6 +118,7 @@ function toTask(row: TaskRow): Task {
     completedAt: row.completed_at,
     estimateMin: row.estimate_min,
     sortOrder: row.sort_order,
+    recurringFromTaskId: row.recurring_from_task_id ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -482,6 +485,8 @@ export interface TaskInsert {
   plannedDate: string | null;
   dueDate: string | null;
   estimateMin: number | null;
+  /** Set by the recurrence service when materialising an occurrence of a rule. */
+  recurringFromTaskId?: string | null;
 }
 
 export async function insertTask(input: TaskInsert): Promise<Task> {
@@ -497,8 +502,8 @@ export async function insertTask(input: TaskInsert): Promise<Task> {
   await db.run(
     `INSERT INTO tasks
        (id, title, notes, goal_id, milestone_id, priority, status, planned_date,
-        due_date, estimate_min, sort_order, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, 'todo', ?, ?, ?, ?, ?, ?);`,
+        due_date, estimate_min, sort_order, recurring_from_task_id, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, 'todo', ?, ?, ?, ?, ?, ?, ?);`,
     [
       id,
       input.title,
@@ -510,6 +515,7 @@ export async function insertTask(input: TaskInsert): Promise<Task> {
       input.dueDate,
       input.estimateMin,
       orderRow?.next ?? 0,
+      input.recurringFromTaskId ?? null,
       now,
       now,
     ],
@@ -519,6 +525,27 @@ export async function insertTask(input: TaskInsert): Promise<Task> {
   const created = await getTask(id);
   if (!created) throw new Error(`Task ${id} vanished immediately after insert`);
   return created;
+}
+
+/**
+ * Finds the occurrence of a repeat rule planned for a day.
+ *
+ * The dedicated lookup exists because the alternative — scanning every task planned for
+ * the day and matching on title — is both slower and wrong: two rules can legitimately
+ * share a title, and a title edit would silently orphan every past occurrence.
+ */
+export async function findOccurrence(
+  recurringFromTaskId: string,
+  plannedDate: string,
+): Promise<Task | null> {
+  const db = await driver();
+  const row = await db.first<TaskRow>(
+    `SELECT * FROM tasks
+      WHERE recurring_from_task_id = ? AND planned_date = ? AND deleted_at IS NULL
+      LIMIT 1;`,
+    [recurringFromTaskId, plannedDate],
+  );
+  return row ? toTask(row) : null;
 }
 
 export interface TaskPatch {

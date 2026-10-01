@@ -392,3 +392,83 @@ does not mistake it for a robust classification scheme, and so that if the SDK e
 exposes typed error codes, the work here is replaced rather than extended.
 
 
+---
+
+### ADR-0019 — Exchange rates are typed by the user, not fetched
+
+Date: 2026-10-01
+Status: accepted
+
+**Context.** `FEATURES/FINANCE.md` requires PHP, USD, EUR and custom currencies, and in
+the same file requires that finance records stay local by default. Those two requirements
+together rule out a live rate feed: an app that must work offline cannot depend on a rate
+service, and a *cached* rate is worse than no rate, because the user cannot see how old it
+is. A total computed from a three-week-old rate looks exactly like a current one.
+
+**Decision.** A rate is a number the user types, stored against a currency pair as an
+integer count of micro-units (1.0 is `1_000_000`). Both directions of a pair are written
+together so the editor cannot show two contradicting rates. There is no transport anywhere
+in `src/finance/rates.ts`, `src/services/exchangeRateService.ts` or their repository, and
+`tests/ui/secondaryModules.test.tsx` asserts that.
+
+Conversion is integer throughout: `minor * rate * 10^toExponent / (10^fromExponent *
+RATE_SCALE)`, with a single rounding step half away from zero. Handling the two exponents
+separately is what makes USD→JPY correct rather than out by a factor of 100.
+
+**Consequences.** A converted total is always explainable — the UI shows the rate it used.
+It can also be out of date, which the same UI makes visible. `convertMinor` can only be as
+precise as six places of rate, so a round trip through a 58× rate drifts by up to a few
+minor units; that bound is asserted rather than assumed away. If a rate feed is ever added
+it must be optional and must show the age of the rate it used, or it will reintroduce
+exactly the problem this decision avoids.
+
+---
+
+### ADR-0020 — Analytics, achievements, balances and the calendar are derived, never stored
+
+Date: 2026-10-01
+Status: accepted
+
+**Context.** Each of these is a number someone will notice being wrong: a streak that does
+not drop when you delete a workout, a budget that still shows last month's spending, an
+achievement that says you have read 40 books when you deleted 3 of them. Storing derived
+values is faster to read and is where all four of those bugs come from.
+
+**Decision.** Every one of these figures is computed on read from the records themselves.
+There is no rollup table, no cached streak and no stored total. `achievement_unlocks` and
+`personal_records` are the only persisted artefacts, and they record *events* — "this
+happened at this time" — not running figures. Every copy that describes a number says what
+it measured and never what it means.
+
+**Consequences.** Deleting a record immediately lowers every number derived from it, which
+is what a user expects and what no cache invalidation bug can get wrong. The cost is query
+work per screen open, which is acceptable at the scale of one person's records on device and
+is bounded by the indexes in `DATA/DATABASE_SCHEMA.md`. The wording rule is a product
+requirement, not a style choice: `FEATURES/ANALYTICS.md` forbids interpretation, and
+`tests/ui/secondaryModules.test.tsx` fails on words like "improved" or "worse".
+
+---
+
+### ADR-0021 — The journal unlock flag is in memory and re-locked on blur
+
+Date: 2026-10-01
+Status: accepted
+
+**Context.** `FEATURES/JOURNAL.md` and `SECURITY/SECURITY.md` both require that the
+journal be protectable without ever becoming a prerequisite for using it. The available
+primitive is device authentication (`expo-local-authentication`), which gates access to the
+app rather than encrypting the records.
+
+**Decision.** The unlock flag is a module-level `let` in `journalExportService`, never
+persisted. The journal tab does not *render* entries while locked and does not *fetch*
+them either — `useJournalEntries` and `useJournalSearch` are both disabled — because a
+preview arriving one frame after the gate is exactly what a lock has to prevent. The tab
+re-locks on blur via `useFocusEffect`, so switching away and back asks again.
+
+**Consequences.** Closing the app re-locks the journal, which is the whole point and is
+stated plainly in the UI. The lock cannot be enabled on a device with no enrolled
+biometric or device credential, and the Settings screen says so and disables the switch,
+rather than offering a lock that would silently not lock. This is an authentication gate,
+**not** at-rest encryption: a determined attacker with the unlocked app and filesystem
+access still has the records. That distinction is stated in the documentation rather than
+left implied.

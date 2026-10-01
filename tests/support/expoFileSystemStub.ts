@@ -2,8 +2,8 @@
  * In-memory stand-in for `expo-file-system`, mirroring the SDK 57 object API.
  *
  * `expo-file-system` is a native module and cannot load in Node, exactly like
- * `expo-sqlite`. The adapter's logic â€” path joining, parent creation, error
- * classification, not reading a whole PDF to check its magic number â€” is worth testing,
+ * `expo-sqlite`. The adapter's logic — path joining, parent creation, error
+ * classification, not reading a whole PDF to check its magic number — is worth testing,
  * so this fake implements the same surface rather than skipping the file.
  *
  * Test-only. Never imported by application code.

@@ -64,14 +64,16 @@ and one supported Android device/emulator.
 
 ### Host limitation
 
-The current build host is **Windows**. iOS builds require macOS with Xcode. Until a
+The current build host is **Linux**. iOS builds require macOS with Xcode. Until a
 macOS host is available, no claim of iOS verification may be made, and Phases 21-23 of
 `START_DEVELOPMENT_TO_PRODUCTION.md` are blocked. See `DEVELOPMENT/KNOWN_ISSUES.md`
 ISSUE-002.
 
-The Android SDK is present at `C:\Users\Razhil\AppData\Local\Android\Sdk`, but `adb`
-is not on `PATH` and no emulator run has been performed, so Android runtime
-verification is also outstanding.
+No Android emulator or AVD is provisioned, so Android runtime verification is also
+outstanding.
+
+Nothing in this repository has been run on a device. Every "verified" claim in the
+documentation means a command passed in this environment, and no more.
 
 Test:
 

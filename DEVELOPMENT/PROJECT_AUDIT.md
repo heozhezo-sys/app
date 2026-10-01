@@ -3,6 +3,11 @@
 Date: 2026-01-10
 Scope: full inspection of `D:\lab\applications\LifeOS` before any implementation.
 
+> **Historical.** This is a dated audit of the repository *before* any implementation, on
+> a Windows host, and it is kept unedited per the knowledge protocol's rule against erasing
+> earlier findings. The host is now Linux and the project has 1017 passing tests across
+> 36 suites on schema v15. For current state read `DEVELOPMENT/PROJECT_STATUS.md`.
+
 ---
 
 ## 1. Headline finding

@@ -56,6 +56,7 @@ const task: Task = {
   completedAt: null,
   estimateMin: null,
   sortOrder: 0,
+  recurringFromTaskId: null,
   createdAt: 0,
   updatedAt: 0,
 };
